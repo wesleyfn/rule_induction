@@ -2,34 +2,40 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class FileUtils {
-    /**
-     * Lê um arquivo CSV e retorna uma lista de listas de strings.
-     *
-     * @param file_path O caminho para o arquivo CSV a ser lido.
-     * @return Uma lista de listas, onde cada lista representa uma 
-     *         linha/regra do arquivo CSV.
-     */
-    public static List<List<String>> readFileCSV(String file_path) {
-        List<List<String>> rulesList = new ArrayList<>();
+public class FileUtils 
+{
+    public static Map<String, List<String>> readFileCSV(String file_path) {
+        Map<String, List<String>> dataMap = new HashMap<>();
 
-        // Tenta abrir e ler o arquivo CSV especificado
         try (BufferedReader reader = new BufferedReader(new FileReader(file_path))) {
-            String line;
-            // Lê cada linha do arquivo
-            while ((line = reader.readLine()) != null) {
-                // Divide a linha em campos usando a vírgula como delimitador
-                String[] rule = line.split(",");
-                // Adiciona uma regra à lista de regras
-                rulesList.add(Arrays.asList(rule));
+            // Lê a primeira linha do arquivo para obter os nomes das colunas (cabeçalho)
+            String header = reader.readLine();
+            if (header != null) 
+            {
+                String line;
+                String[] columnNames = header.split(",");
+
+                // Atribui a cada coluna uma instancia de lista
+                for (String columnName : columnNames) {
+                    dataMap.put(columnName, new ArrayList<>());
+                }
+
+                // Adiciona a cada instancia de lista uma lista de strings
+                while ((line = reader.readLine()) != null) {
+                    String[] values = line.split(",");
+                    for (int i = 0; i < columnNames.length && i < values.length; i++) {
+                        dataMap.get(columnNames[i]).add(values[i]);
+                    }
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return rulesList;
+        return dataMap;
     }
 }
