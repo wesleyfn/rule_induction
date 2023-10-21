@@ -38,4 +38,45 @@ public class FileUtils
 
         return dataMap;
     }
+
+    public static String encontreMelhorComplexo(Map<String, List<String>> Exemplos, String classe) {
+        String melhorComplexo = "";
+    
+        // Inicialize um valor mínimo para a confiabilidade positiva
+        double melhorConfiabilidadePositiva = 0.0;
+    
+        for (String feature : Exemplos.keySet()) {
+            // Calcule a confiabilidade positiva para a feature atual
+            double confiabilidadePositiva = calcularConfiabilidadePositiva(feature, Exemplos, classe);
+    
+            // Se a confiabilidade positiva atual for maior que a anterior, atualize o melhorComplexo
+            if (confiabilidadePositiva > melhorConfiabilidadePositiva) {
+                melhorComplexo = feature;
+                melhorConfiabilidadePositiva = confiabilidadePositiva;
+            }
+        }
+    
+        return melhorComplexo;
+    }
+    
+    public static double calcularConfiabilidadePositiva(String feature, Map<String, List<String>> Exemplos, String classe) {
+        int totalPositivos = 0; // Total de exemplos positivos da classe
+        int positivosComFeature = 0; // Total de exemplos positivos com a feature
+    
+        for (int i = 0; i < Exemplos.get("classe").size(); i++) {
+            String classeAtual = Exemplos.get("classe").get(i);
+            if (classeAtual.equals(classe)) {
+                totalPositivos++;
+                if (Exemplos.get(feature).get(i).equals("1")) {
+                    positivosComFeature++;
+                }
+            }
+        }
+    
+        if (totalPositivos == 0) {
+            return 0.0; // Evitar divisão por zero
+        }
+    
+        return (double) positivosComFeature / totalPositivos;
+    }
 }
