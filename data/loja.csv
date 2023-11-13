@@ -1,0 +1,13 @@
+produto,categoria,peso,preco,disponibilidade
+cafeteira,Eletrodomésticos,2kg,150,disponível
+fogão,Eletrodomésticos,20kg,800,disponível
+bicicleta,Esportes,12kg,300,disponível
+notebook,Tecnologia,2.5kg,1200,indisponível
+televisor,Eletrodomésticos,15kg,600,disponível
+liquidificador,Eletrodomésticos,1.5kg,50,disponível
+mochila,Acessórios,0.8kg,30,disponível
+smartphone,Tecnologia,0.2kg,700,indisponível
+ventilador,Eletrodomésticos,3kg,80,disponível
+cadeira,Móveis,5kg,100,disponível
+forno,Eletrodomésticos,10kg,400,indisponível
+headphones,Acessórios,0.3kg,60,disponível

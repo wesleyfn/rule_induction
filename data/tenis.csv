@@ -1,0 +1,15 @@
+aparencia,temperatura,umidade,ventando,jogar
+sol,quente,alta,falso,nao
+sol,quente,alta,verdadeiro,nao
+nublado,quente,alta,falso,sim
+chuva,agradavel,alta,falso,sim
+chuva,fria,normal,falso,sim
+chuva,fria,normal,verdadeiro,nao
+nublado,fria,normal,verdadeiro,sim
+sol,agradavel,alta,falso,nao
+sol,fria,normal,falso,sim
+chuva,agradavel,normal,falso,sim
+sol,agradavel,normal,verdadeiro,sim
+nublado,agradavel,alta,verdadeiro,sim
+nublado,quente,normal,falso,sim
+chuva,agradavel,alta,verdadeiro,nao
