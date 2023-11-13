@@ -9,6 +9,7 @@ require 'byebug'
 
 class RuleInduction
   def initialize(initial_table, header_class)
+    # Inicializa as variáveis de instância
     @i_table, @header_class = [initial_table, header_class]
     @sorted_class = []
     @indicated_class = nil
@@ -19,16 +20,19 @@ class RuleInduction
   end
 
   def get_rules()
+    # Cria uma cópia profunda da tabela inicial
     b_table = Marshal.load(Marshal.dump(@i_table))
     @sorted_class = sort_classes(b_table)
 
+    # Loop sobre as classes ordenadas
     @sorted_class.each do |c|
       @i_table = Marshal.load(Marshal.dump(b_table))
       @indicated_class, qtd_class = c
-      while c[1] > 0
+
+      # Loop até não haver mais instâncias da classe indicada
+      while qtd_class > 0
         @arr_rules << best_complex(@i_table)
-        # show_table(@i_table)
-        c[1] -= @removed_rows_qtt
+        qtd_class -= @removed_rows_qtt
       end
     end
     @arr_rules
@@ -37,16 +41,21 @@ class RuleInduction
   private
 
   def best_complex(b_table)
+    # Cria uma cópia profunda da tabela base
     t_table = Marshal.load(Marshal.dump(b_table))
     s_table = nil
     @rule = 'if '
 
     values = positive_confidence(t_table)
+
+    # Loop até a tabela de treinamento estar vazia
     while !t_table.empty?
       unless need_specialize?(values[0])
+        # Atualiza a tabela inicial e retorna a regra
         @i_table = update_table(t_table, s_table, @i_table, values)
         return @rule + " then class=#{@indicated_class}\n"
       else
+        # Especializa a tabela de treinamento
         s_table = specialize(t_table, values)
       end
       values = positive_confidence(s_table)
@@ -54,6 +63,7 @@ class RuleInduction
   end
 
   def positive_confidence(table)
+    # Calcula a confiança positiva
     complex = {}
     max_total = 0.0
     max_value, max_attr, max_column = [0.0, '', '']
@@ -68,21 +78,23 @@ class RuleInduction
         counts.each { |_, value| total += value }
         conf = (counts[@indicated_class] / total.to_f).round(2)
 
+        # Atualiza os valores máximos
         if max_value < conf
           max_total = total
           max_value, max_attr, max_column = [conf, attr, header]
-        elsif max_value == conf and max_total < total
+        elsif max_value == conf && max_total < total
           max_value, max_attr, max_column = [conf, attr, header]
           max_total = total
         end
       end
     end
+
     [max_value, max_attr, max_column]
   end
 
   def count_attributes(table)
+    # Conta a ocorrência de atributos em cada coluna
     count = {}
-    # Inicialize a contagem com valores padrão
     table.headers.each do |header|
       count[header] = {}
       table[header].uniq.each do |value|
@@ -90,7 +102,6 @@ class RuleInduction
       end
     end
 
-    # Preencha a contagem
     table.each do |row|
       table.headers.each do |header|
         if header != @header_class
@@ -105,6 +116,7 @@ class RuleInduction
   end
 
   def specialize(t_table, values)
+    # Especializa a tabela
     @rule += "#{values[2]}=#{values[1]} and "
     s_table = Marshal.load(Marshal.dump(t_table))
 
@@ -116,10 +128,11 @@ class RuleInduction
   end
 
   def update_table(t_table, s_table, b_table, values)
+    # Atualiza a tabela
     @rule += "#{values[2]}=#{values[1]}"
 
     if s_table != nil
-      t_table.delete_if { |row| !(row[values[2]] == values[1] && row[@header_class] == @indicated_class) }
+      t_table.delete_if { |row| row[values[2]] != values[1] || row[@header_class] != @indicated_class }
       up_table = b_table.delete_if { |row| t_table.include?(row) }
       @removed_rows_qtt = t_table.length
     else
@@ -131,6 +144,7 @@ class RuleInduction
   end
 
   def sort_classes(table)
+    # Ordena as classes pela ocorrência
     counts = count_attributes(table)
     sorted_class = (
       counts[@header_class].sort_by { |key, column| column }
@@ -140,15 +154,7 @@ class RuleInduction
   end
 
   def need_specialize?(values)
+    # Verifica se a especialização é necessária
     (values == 1.0) ? false : true
   end
-
-=begin   def show_table(table)
-    i = 1
-    table.each do |row|
-      puts "Linha #{i}: #{row}"
-      i += 1
-    end
-  end
-=end
 end
