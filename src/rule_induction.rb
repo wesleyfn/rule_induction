@@ -1,31 +1,19 @@
 require 'byebug'
 
-=begin
-  i_table= initial_table
-  b_table= base_table
-  t_table= training_table
-  s_table= specialized_table
-=end
-
 class RuleInduction
   def initialize(initial_table, header_class)
     # Inicializa as variáveis de instância
     @i_table, @header_class = [initial_table, header_class]
-    @sorted_class = []
-    @indicated_class = nil
-
-    @rule = ''
     @arr_rules = []
-    @removed_rows_qtt = 0
   end
 
   def get_rules()
     # Cria uma cópia profunda da tabela inicial
     b_table = Marshal.load(Marshal.dump(@i_table))
-    @sorted_class = sort_classes(b_table)
+    sorted_class = sort_classes(b_table)
 
     # Loop sobre as classes ordenadas
-    @sorted_class.each do |c|
+    sorted_class.each do |c|
       @i_table = Marshal.load(Marshal.dump(b_table))
       @indicated_class, qtd_class = c
 
@@ -35,6 +23,7 @@ class RuleInduction
         qtd_class -= @removed_rows_qtt
       end
     end
+
     @arr_rules
   end
 
@@ -42,29 +31,30 @@ class RuleInduction
 
   def best_complex(b_table)
     # Cria uma cópia profunda da tabela base
+
     t_table = Marshal.load(Marshal.dump(b_table))
     s_table = nil
     @rule = 'if '
 
-    values = positive_confidence(t_table)
-
     # Loop até a tabela de treinamento estar vazia
     while !t_table.empty?
+      values = positive_confidence(t_table)
+
       unless need_specialize?(values[0])
         # Atualiza a tabela inicial e retorna a regra
         @i_table = update_table(t_table, s_table, @i_table, values)
         return @rule + " then class=#{@indicated_class}\n"
+
       else
         # Especializa a tabela de treinamento
         s_table = specialize(t_table, values)
+        values = positive_confidence(s_table)
       end
-      values = positive_confidence(s_table)
     end
   end
 
   def positive_confidence(table)
     # Calcula a confiança positiva
-    complex = {}
     max_total = 0.0
     max_value, max_attr, max_column = [0.0, '', '']
 
@@ -73,16 +63,11 @@ class RuleInduction
 
     data_count.each do |header, attributes|
       attributes.each do |attr, counts|
-        total = 0.0
-
-        counts.each { |_, value| total += value }
+        total = counts.values.sum
         conf = (counts[@indicated_class] / total.to_f).round(2)
 
         # Atualiza os valores máximos
-        if max_value < conf
-          max_total = total
-          max_value, max_attr, max_column = [conf, attr, header]
-        elsif max_value == conf && max_total < total
+        if max_value < conf || (max_value == conf && max_total < total)
           max_value, max_attr, max_column = [conf, attr, header]
           max_total = total
         end
@@ -118,12 +103,11 @@ class RuleInduction
   def specialize(t_table, values)
     # Especializa a tabela
     @rule += "#{values[2]}=#{values[1]} and "
-    s_table = Marshal.load(Marshal.dump(t_table))
-
-    s_table.delete_if { |row| row[values[2]] != values[1] }
     t_table.delete_if { |row| row[values[2]] != values[1] }
 
+    s_table = Marshal.load(Marshal.dump(t_table))
     s_table.delete(values[2])
+
     s_table
   end
 
@@ -146,15 +130,13 @@ class RuleInduction
   def sort_classes(table)
     # Ordena as classes pela ocorrência
     counts = count_attributes(table)
-    sorted_class = (
-      counts[@header_class].sort_by { |key, column| column }
-    ).reverse
+    sorted_class = counts[@header_class].sort_by { |key, column| column }.reverse
 
     sorted_class
   end
 
   def need_specialize?(values)
     # Verifica se a especialização é necessária
-    (values == 1.0) ? false : true
+    values != 1.0
   end
 end
