@@ -1,5 +1,3 @@
-require 'byebug'
-
 class RuleInduction
   def initialize(initial_table, header_class)
     # Inicializa as variáveis de instância
